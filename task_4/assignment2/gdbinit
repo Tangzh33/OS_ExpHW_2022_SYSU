@@ -1,0 +1,22 @@
+target remote:1234
+set disassembly-flavor intel
+add-symbol-file mbr.symbol 0x7c00
+add-symbol-file bootloader.symbol 0x7e00
+b *0x7c00 
+# break_point:1
+b 18 
+# break_point:2
+b 38 
+# break_point:3
+b 41 
+# break_point:4
+b 43 
+# break_point:5
+b 46 
+# break_point:6
+b 51 
+# break_point:7
+b 56 
+# break_point:8
+layout asm
+#show the memory:x/12xw 0x8800

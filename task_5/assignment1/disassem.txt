@@ -1,0 +1,100 @@
+
+cpp_func.o：     文件格式 elf32-i386
+
+
+Disassembly of section .text:
+
+00000000 <_Z17function_from_CPPv>:
+#include <iostream>
+
+
+void function_from_CPP() {
+   0:	f3 0f 1e fb          	endbr32 
+   4:	55                   	push   %ebp
+   5:	89 e5                	mov    %esp,%ebp
+   7:	53                   	push   %ebx
+   8:	83 ec 04             	sub    $0x4,%esp
+   b:	e8 fc ff ff ff       	call   c <_Z17function_from_CPPv+0xc>
+  10:	81 c3 02 00 00 00    	add    $0x2,%ebx
+    std::cout << "This is a function from C++." << std::endl;
+  16:	83 ec 08             	sub    $0x8,%esp
+  19:	8d 83 01 00 00 00    	lea    0x1(%ebx),%eax
+  1f:	50                   	push   %eax
+  20:	8b 83 00 00 00 00    	mov    0x0(%ebx),%eax
+  26:	50                   	push   %eax
+  27:	e8 fc ff ff ff       	call   28 <_Z17function_from_CPPv+0x28>
+  2c:	83 c4 10             	add    $0x10,%esp
+  2f:	83 ec 08             	sub    $0x8,%esp
+  32:	8b 93 00 00 00 00    	mov    0x0(%ebx),%edx
+  38:	52                   	push   %edx
+  39:	50                   	push   %eax
+  3a:	e8 fc ff ff ff       	call   3b <_Z17function_from_CPPv+0x3b>
+  3f:	83 c4 10             	add    $0x10,%esp
+  42:	90                   	nop
+  43:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  46:	c9                   	leave  
+  47:	c3                   	ret    
+
+00000048 <_Z41__static_initialization_and_destruction_0ii>:
+  48:	f3 0f 1e fb          	endbr32 
+  4c:	55                   	push   %ebp
+  4d:	89 e5                	mov    %esp,%ebp
+  4f:	53                   	push   %ebx
+  50:	83 ec 04             	sub    $0x4,%esp
+  53:	e8 fc ff ff ff       	call   54 <_Z41__static_initialization_and_destruction_0ii+0xc>
+  58:	81 c3 02 00 00 00    	add    $0x2,%ebx
+  5e:	83 7d 08 01          	cmpl   $0x1,0x8(%ebp)
+  62:	75 3b                	jne    9f <_Z41__static_initialization_and_destruction_0ii+0x57>
+  64:	81 7d 0c ff ff 00 00 	cmpl   $0xffff,0xc(%ebp)
+  6b:	75 32                	jne    9f <_Z41__static_initialization_and_destruction_0ii+0x57>
+  extern wostream wclog;	/// Linked to standard error (buffered)
+#endif
+  ///@}
+
+  // For construction of filebuffers for cout, cin, cerr, clog et. al.
+  static ios_base::Init __ioinit;
+  6d:	83 ec 0c             	sub    $0xc,%esp
+  70:	8d 83 00 00 00 00    	lea    0x0(%ebx),%eax
+  76:	50                   	push   %eax
+  77:	e8 fc ff ff ff       	call   78 <_Z41__static_initialization_and_destruction_0ii+0x30>
+  7c:	83 c4 10             	add    $0x10,%esp
+  7f:	83 ec 04             	sub    $0x4,%esp
+  82:	8d 83 00 00 00 00    	lea    0x0(%ebx),%eax
+  88:	50                   	push   %eax
+  89:	8d 83 00 00 00 00    	lea    0x0(%ebx),%eax
+  8f:	50                   	push   %eax
+  90:	8b 83 00 00 00 00    	mov    0x0(%ebx),%eax
+  96:	50                   	push   %eax
+  97:	e8 fc ff ff ff       	call   98 <_Z41__static_initialization_and_destruction_0ii+0x50>
+  9c:	83 c4 10             	add    $0x10,%esp
+  9f:	90                   	nop
+  a0:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  a3:	c9                   	leave  
+  a4:	c3                   	ret    
+
+000000a5 <_GLOBAL__sub_I__Z17function_from_CPPv>:
+  a5:	f3 0f 1e fb          	endbr32 
+  a9:	55                   	push   %ebp
+  aa:	89 e5                	mov    %esp,%ebp
+  ac:	83 ec 08             	sub    $0x8,%esp
+  af:	e8 fc ff ff ff       	call   b0 <_GLOBAL__sub_I__Z17function_from_CPPv+0xb>
+  b4:	05 01 00 00 00       	add    $0x1,%eax
+  b9:	83 ec 08             	sub    $0x8,%esp
+  bc:	68 ff ff 00 00       	push   $0xffff
+  c1:	6a 01                	push   $0x1
+  c3:	e8 80 ff ff ff       	call   48 <_Z41__static_initialization_and_destruction_0ii>
+  c8:	83 c4 10             	add    $0x10,%esp
+  cb:	c9                   	leave  
+  cc:	c3                   	ret    
+
+Disassembly of section .text.__x86.get_pc_thunk.ax:
+
+00000000 <__x86.get_pc_thunk.ax>:
+   0:	8b 04 24             	mov    (%esp),%eax
+   3:	c3                   	ret    
+
+Disassembly of section .text.__x86.get_pc_thunk.bx:
+
+00000000 <__x86.get_pc_thunk.bx>:
+   0:	8b 1c 24             	mov    (%esp),%ebx
+   3:	c3                   	ret    

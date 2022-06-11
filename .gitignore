@@ -1,0 +1,6 @@
+.vscode
+0UCore/*
+1thHomework/*
+*.bin
+*.o
+*.obj

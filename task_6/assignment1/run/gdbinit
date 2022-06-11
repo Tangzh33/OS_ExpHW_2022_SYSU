@@ -1,0 +1,6 @@
+target remote:1234
+file ../build/kernel.o
+set disassembly-flavor intel
+b *0x20000
+c
+s
