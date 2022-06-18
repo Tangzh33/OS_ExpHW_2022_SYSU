@@ -85,7 +85,7 @@ int BitMap::allocate(const int count)
     }
 
     return -1;
-    
+    */
 
    if (count == 0)
         return -1;
@@ -140,7 +140,7 @@ int BitMap::allocate(const int count)
         return start;
     }
     return -1;
-    */
+    /*
 
     if (count == 0)
         return -1;
@@ -195,6 +195,7 @@ int BitMap::allocate(const int count)
         return start;
     }
     return -1;
+    */
 }
 
 void BitMap::release(const int index, const int count)

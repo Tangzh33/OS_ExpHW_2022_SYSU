@@ -47,7 +47,7 @@ int BitMap::allocate(const int count)
 {
     if (count == 0)
         return -1;
-    sLock.P();
+    // sLock.P();
     int index, empty, start;
 
     index = 0;

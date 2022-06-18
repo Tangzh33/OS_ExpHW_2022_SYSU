@@ -1,0 +1,7 @@
+target remote:1234
+file ../build/kernel.o
+set disassembly-flavor intel
+b fork
+b first_process
+b schedule
+b printf

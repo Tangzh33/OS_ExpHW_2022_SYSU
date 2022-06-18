@@ -1,0 +1,9 @@
+target remote:1234
+file ../build/kernel.o
+set disassembly-flavor intel
+b asm_system_call
+b asm_system_call_handler
+c
+print $esp
+print $ss
+p/x tss
