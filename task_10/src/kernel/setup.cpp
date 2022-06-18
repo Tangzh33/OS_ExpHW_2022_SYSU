@@ -30,6 +30,9 @@ int syscall_0(int first, int second, int third, int forth, int fifth)
 
 void first_process()
 {
+    
+
+    exit(0);
     int pid = fork();
     int retval;
 
@@ -76,8 +79,9 @@ void first_thread(void *arg)
 {
 
     printf("start process\n");
+    
     programManager.executeProcess((const char *)first_process, 1);
-    programManager.executeThread(second_thread, nullptr, "second", 1);
+    // programManager.executeThread(second_thread, nullptr, "second", 1);
     asm_halt();
 }
 

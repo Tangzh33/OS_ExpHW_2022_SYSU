@@ -87,6 +87,11 @@ void InterruptManager::setTimeInterrupt(void *handler)
 // 中断处理函数
 extern "C" void c_time_interrupt_handler()
 {
+    if (memoryManager.kernelVirtual.localClock < 20)
+    {
+        printf_log("Clock is ticking %d...\n", memoryManager.kernelVirtual.localClock);
+    }
+    memoryManager.updateLRU();
     PCB *cur = programManager.running;
 
     if (cur->ticks)

@@ -63,6 +63,9 @@ public:
 
     // 释放虚拟页
     void releaseVirtualPages(enum AddressPoolType type, const int vaddr, const int count);
+
+    // 计算LRU更新
+    void updateLRU();
 };
 
 #endif

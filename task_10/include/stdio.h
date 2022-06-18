@@ -19,7 +19,7 @@ public:
     // 打印字符c，颜色默认到光标位置
     void print(uint8 c);
     // 打印字符串，颜色默认
-    int print(const char *const str);
+    int print(const char *const str, int color = 0x07);
     // 移动光标到一维位置
     void moveCursor(uint position);
     // 移动光标到二维位置
@@ -33,5 +33,8 @@ private:
 };
 
 int printf(const char *const fmt, ...);
+int printf_log(const char *const fmt, ...);
+int printf_warning(const char *const fmt, ...);
+int printf_error(const char *const fmt, ...);
 
 #endif

@@ -16,8 +16,8 @@ public:
 int syscall_0(int first, int second, int third, int forth, int fifth);
 
 // 第1个系统调用, write
-int write(const char *str);
-int syscall_write(const char *str);
+int write(const char *str, int color = 0x7);
+int syscall_write(const char *str, int color = 0x7);
 
 // 第2个系统调用, fork
 int fork();

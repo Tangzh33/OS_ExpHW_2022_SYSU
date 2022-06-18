@@ -12,7 +12,7 @@ STDIO::STDIO()
 
 void STDIO::initialize()
 {
-    screen = (uint8 *)0xc00b8000;
+    screen = (uint8 *)0xb8000;
 }
 
 void STDIO::print(uint x, uint y, uint8 c, uint8 color)
@@ -114,7 +114,7 @@ void STDIO::rollUp()
     }
 }
 
-int STDIO::print(const char *const str)
+int STDIO::print(const char *const str, int color)
 {
     int i = 0;
 
@@ -137,7 +137,7 @@ int STDIO::print(const char *const str)
             break;
 
         default:
-            print(str[i]);
+            print(str[i], color);
             break;
         }
     }
@@ -145,7 +145,7 @@ int STDIO::print(const char *const str)
     return i;
 }
 
-int printf_add_to_buffer(char *buffer, char c, int &idx, const int BUF_LEN)
+int printf_add_to_buffer(char *buffer, char c, int &idx, const int BUF_LEN, int color = 0x07)
 {
     int counter = 0;
 
@@ -155,7 +155,7 @@ int printf_add_to_buffer(char *buffer, char c, int &idx, const int BUF_LEN)
     if (idx == BUF_LEN)
     {
         buffer[idx] = '\0';
-        counter = write(buffer);
+        counter = write(buffer,color);
         idx = 0;
     }
 
@@ -176,6 +176,7 @@ int printf(const char *const fmt, ...)
     idx = 0;
     counter = 0;
 
+    int temp, dict;// 为了进制转换定义
     for (int i = 0; fmt[i]; ++i)
     {
         if (fmt[i] != '%')
@@ -209,20 +210,73 @@ int printf(const char *const fmt, ...)
 
             case 'd':
             case 'x':
-                int temp = va_arg(ap, int);
+            case 'o':
+            case 'b':
+                temp = va_arg(ap, int);
 
                 if (temp < 0 && fmt[i] == 'd')
                 {
                     counter += printf_add_to_buffer(buffer, '-', idx, BUF_LEN);
                     temp = -temp;
                 }
-
-                itos(number, temp, (fmt[i] == 'd' ? 10 : 16));
+                dict = 0;
+                switch (fmt[i])
+                {
+                case 'd':
+                    dict = 10;
+                    break;
+                case 'x':
+                    dict = 16;
+                    break;
+                case 'o':
+                    dict = 8;
+                    break;
+                case 'b':
+                    dict = 2;
+                    break;
+                default:
+                    dict = 10;
+                    break;
+                }
+                itos(number, temp, dict);
 
                 for (int j = 0; number[j]; ++j)
                 {
                     counter += printf_add_to_buffer(buffer, number[j], idx, BUF_LEN);
                 }
+                break;
+
+
+            case 'f':
+                double flt = va_arg(ap, double);
+                char to_string[BUF_LEN + 1] = {0};
+                int len_buffer = 0;
+                if(flt < 0)
+                {
+                    to_string[len_buffer++] = '-';
+                    flt = -flt;
+                }
+                int tmp = (int)flt;
+                // printf("[DEBUG]%d\n", tmp);
+                while (tmp)
+                {
+                    to_string[len_buffer++] = tmp % 10 + '0';
+                    tmp /= 10;
+                }
+                for(int i = 0; i < (len_buffer / 2); ++i)
+                    swap(to_string[len_buffer - i - 1], to_string[i]);
+                to_string[len_buffer ++] = '.';
+                double ftmp = flt - (int)flt;
+                ftmp *= 10;
+                for (int i = 0; i < 6; i++)
+                {
+                    to_string[len_buffer++] = (int)ftmp + '0';
+                    ftmp = (ftmp - (int)ftmp) * 10;
+                }
+                buffer[idx] = '\0';
+                idx = 0;
+                counter += write(buffer);
+                counter += write(to_string);
                 break;
             }
         }
@@ -233,3 +287,391 @@ int printf(const char *const fmt, ...)
 
     return counter;
 }
+
+
+
+
+/*Define Printf for Log*/
+int printf_log(const char *const fmt, ...)
+{
+#ifdef LOG
+    const int BUF_LEN = 32;
+
+    char buffer[BUF_LEN + 1];
+    char number[33];
+
+    int idx, counter;
+    va_list ap;
+
+    va_start(ap, fmt);
+    idx = 0;
+    counter = 0;
+
+    int temp, dict;// 为了进制转换定义
+    for (int i = 0; fmt[i]; ++i)
+    {
+        if (fmt[i] != '%')
+        {
+            counter += printf_add_to_buffer(buffer, fmt[i], idx, BUF_LEN, 0x07);
+        }
+        else
+        {
+            i++;
+            if (fmt[i] == '\0')
+            {
+                break;
+            }
+
+            switch (fmt[i])
+            {
+            case '%':
+                counter += printf_add_to_buffer(buffer, fmt[i], idx, BUF_LEN, 0x07);
+                break;
+
+            case 'c':
+                counter += printf_add_to_buffer(buffer, va_arg(ap, char), idx, BUF_LEN, 0x07);
+                break;
+
+            case 's':
+                buffer[idx] = '\0';
+                idx = 0;
+                counter += write(buffer, 0x07);
+                counter += write(va_arg(ap, const char *), 0x07);
+                break;
+
+            case 'd':
+            case 'x':
+            case 'o':
+            case 'b':
+                temp = va_arg(ap, int);
+
+                if (temp < 0 && fmt[i] == 'd')
+                {
+                    counter += printf_add_to_buffer(buffer, '-', idx, BUF_LEN, 0x07);
+                    temp = -temp;
+                }
+                dict = 0;
+                switch (fmt[i])
+                {
+                case 'd':
+                    dict = 10;
+                    break;
+                case 'x':
+                    dict = 16;
+                    break;
+                case 'o':
+                    dict = 8;
+                    break;
+                case 'b':
+                    dict = 2;
+                    break;
+                default:
+                    dict = 10;
+                    break;
+                }
+                itos(number, temp, dict);
+
+                for (int j = 0; number[j]; ++j)
+                {
+                    counter += printf_add_to_buffer(buffer, number[j], idx, BUF_LEN, 0x07);
+                }
+                break;
+
+
+            case 'f':
+                double flt = va_arg(ap, double);
+                char to_string[BUF_LEN + 1] = {0};
+                int len_buffer = 0;
+                if(flt < 0)
+                {
+                    to_string[len_buffer++] = '-';
+                    flt = -flt;
+                }
+                int tmp = (int)flt;
+                // printf("[DEBUG]%d\n", tmp);
+                while (tmp)
+                {
+                    to_string[len_buffer++] = tmp % 10 + '0';
+                    tmp /= 10;
+                }
+                for(int i = 0; i < (len_buffer / 2); ++i)
+                    swap(to_string[len_buffer - i - 1], to_string[i]);
+                to_string[len_buffer ++] = '.';
+                double ftmp = flt - (int)flt;
+                ftmp *= 10;
+                for (int i = 0; i < 6; i++)
+                {
+                    to_string[len_buffer++] = (int)ftmp + '0';
+                    ftmp = (ftmp - (int)ftmp) * 10;
+                }
+                buffer[idx] = '\0';
+                idx = 0;
+                counter += write(buffer, 0x07);
+                counter += write(to_string, 0x07);
+                break;
+            }
+        }
+    }
+
+    buffer[idx] = '\0';
+    counter += write(buffer, 0x07);
+
+    return counter;
+#endif
+}
+
+int printf_warning(const char *const fmt, ...)
+{
+#if (defined LOG) || (defined WARNING)
+    const int BUF_LEN = 32;
+
+    char buffer[BUF_LEN + 1];
+    char number[33];
+
+    int idx, counter;
+    va_list ap;
+
+    va_start(ap, fmt);
+    idx = 0;
+    counter = 0;
+
+    int temp, dict;// 为了进制转换定义
+    for (int i = 0; fmt[i]; ++i)
+    {
+        if (fmt[i] != '%')
+        {
+            counter += printf_add_to_buffer(buffer, fmt[i], idx, BUF_LEN, 0x03);
+        }
+        else
+        {
+            i++;
+            if (fmt[i] == '\0')
+            {
+                break;
+            }
+
+            switch (fmt[i])
+            {
+            case '%':
+                counter += printf_add_to_buffer(buffer, fmt[i], idx, BUF_LEN, 0x03);
+                break;
+
+            case 'c':
+                counter += printf_add_to_buffer(buffer, va_arg(ap, char), idx, BUF_LEN, 0x03);
+                break;
+
+            case 's':
+                buffer[idx] = '\0';
+                idx = 0;
+                counter += write(buffer, 0x03);
+                counter += write(va_arg(ap, const char *), 0x03);
+                break;
+
+            case 'd':
+            case 'x':
+            case 'o':
+            case 'b':
+                temp = va_arg(ap, int);
+
+                if (temp < 0 && fmt[i] == 'd')
+                {
+                    counter += printf_add_to_buffer(buffer, '-', idx, BUF_LEN, 0x03);
+                    temp = -temp;
+                }
+                dict = 0;
+                switch (fmt[i])
+                {
+                case 'd':
+                    dict = 10;
+                    break;
+                case 'x':
+                    dict = 16;
+                    break;
+                case 'o':
+                    dict = 8;
+                    break;
+                case 'b':
+                    dict = 2;
+                    break;
+                default:
+                    dict = 10;
+                    break;
+                }
+                itos(number, temp, dict);
+
+                for (int j = 0; number[j]; ++j)
+                {
+                    counter += printf_add_to_buffer(buffer, number[j], idx, BUF_LEN, 0x03);
+                }
+                break;
+
+
+            case 'f':
+                double flt = va_arg(ap, double);
+                char to_string[BUF_LEN + 1] = {0};
+                int len_buffer = 0;
+                if(flt < 0)
+                {
+                    to_string[len_buffer++] = '-';
+                    flt = -flt;
+                }
+                int tmp = (int)flt;
+                // printf("[DEBUG]%d\n", tmp);
+                while (tmp)
+                {
+                    to_string[len_buffer++] = tmp % 10 + '0';
+                    tmp /= 10;
+                }
+                for(int i = 0; i < (len_buffer / 2); ++i)
+                    swap(to_string[len_buffer - i - 1], to_string[i]);
+                to_string[len_buffer ++] = '.';
+                double ftmp = flt - (int)flt;
+                ftmp *= 10;
+                for (int i = 0; i < 6; i++)
+                {
+                    to_string[len_buffer++] = (int)ftmp + '0';
+                    ftmp = (ftmp - (int)ftmp) * 10;
+                }
+                buffer[idx] = '\0';
+                idx = 0;
+                counter += write(buffer, 0x03);
+                counter += write(to_string, 0x03);
+                break;
+            }
+        }
+    }
+
+    buffer[idx] = '\0';
+    counter += write(buffer, 0x03);
+
+    return counter;
+#endif
+}
+
+
+int printf_error(const char *const fmt, ...)
+{
+    const int BUF_LEN = 32;
+
+    char buffer[BUF_LEN + 1];
+    char number[33];
+
+    int idx, counter;
+    va_list ap;
+
+    va_start(ap, fmt);
+    idx = 0;
+    counter = 0;
+
+    int temp, dict;// 为了进制转换定义
+    for (int i = 0; fmt[i]; ++i)
+    {
+        if (fmt[i] != '%')
+        {
+            counter += printf_add_to_buffer(buffer, fmt[i], idx, BUF_LEN, 0x47);
+        }
+        else
+        {
+            i++;
+            if (fmt[i] == '\0')
+            {
+                break;
+            }
+
+            switch (fmt[i])
+            {
+            case '%':
+                counter += printf_add_to_buffer(buffer, fmt[i], idx, BUF_LEN, 0x47);
+                break;
+
+            case 'c':
+                counter += printf_add_to_buffer(buffer, va_arg(ap, char), idx, BUF_LEN, 0x47);
+                break;
+
+            case 's':
+                buffer[idx] = '\0';
+                idx = 0;
+                counter += write(buffer, 0x47);
+                counter += write(va_arg(ap, const char *), 0x47);
+                break;
+
+            case 'd':
+            case 'x':
+            case 'o':
+            case 'b':
+                temp = va_arg(ap, int);
+
+                if (temp < 0 && fmt[i] == 'd')
+                {
+                    counter += printf_add_to_buffer(buffer, '-', idx, BUF_LEN, 0x47);
+                    temp = -temp;
+                }
+                dict = 0;
+                switch (fmt[i])
+                {
+                case 'd':
+                    dict = 10;
+                    break;
+                case 'x':
+                    dict = 16;
+                    break;
+                case 'o':
+                    dict = 8;
+                    break;
+                case 'b':
+                    dict = 2;
+                    break;
+                default:
+                    dict = 10;
+                    break;
+                }
+                itos(number, temp, dict);
+
+                for (int j = 0; number[j]; ++j)
+                {
+                    counter += printf_add_to_buffer(buffer, number[j], idx, BUF_LEN, 0x47);
+                }
+                break;
+
+
+            case 'f':
+                double flt = va_arg(ap, double);
+                char to_string[BUF_LEN + 1] = {0};
+                int len_buffer = 0;
+                if(flt < 0)
+                {
+                    to_string[len_buffer++] = '-';
+                    flt = -flt;
+                }
+                int tmp = (int)flt;
+                // printf("[DEBUG]%d\n", tmp);
+                while (tmp)
+                {
+                    to_string[len_buffer++] = tmp % 10 + '0';
+                    tmp /= 10;
+                }
+                for(int i = 0; i < (len_buffer / 2); ++i)
+                    swap(to_string[len_buffer - i - 1], to_string[i]);
+                to_string[len_buffer ++] = '.';
+                double ftmp = flt - (int)flt;
+                ftmp *= 10;
+                for (int i = 0; i < 6; i++)
+                {
+                    to_string[len_buffer++] = (int)ftmp + '0';
+                    ftmp = (ftmp - (int)ftmp) * 10;
+                }
+                buffer[idx] = '\0';
+                idx = 0;
+                counter += write(buffer, 0x47);
+                counter += write(to_string, 0x47);
+                break;
+            }
+        }
+    }
+
+    buffer[idx] = '\0';
+    counter += write(buffer, 0x47);
+
+    return counter;
+}
+

@@ -37,7 +37,7 @@ void MemoryManager::initialize()
     int userPhysicalBitMapStart = kernelPhysicalBitMapStart + ceil(kernelPages, 8);
     int kernelVirtualBitMapStart = userPhysicalBitMapStart + ceil(userPages, 8);
 
-
+    // 限制实际页数从而
     kernelPages = 10;
     userPages = 10;
     kernelPhysical.initialize(

@@ -24,12 +24,12 @@ bool SystemService::setSystemCall(int index, int function)
     return true;
 }
 
-int write(const char *str) {
-    return asm_system_call(1, (int)str);
+int write(const char *str, int color) {
+    return asm_system_call(1, (int)str, color);
 }
 
-int syscall_write(const char *str) {
-    return stdio.print(str);
+int syscall_write(const char *str, int color) {
+    return stdio.print(str, color);
 }
 
 int fork() {
