@@ -30,9 +30,13 @@ int syscall_0(int first, int second, int third, int forth, int fifth)
 
 void first_process()
 {
-    
+    printf_log("thread exit\n");
+    printf_warning("thread exit\n");
+    unsigned int *ptr = (unsigned int *)0x60000001;
+    // *ptr = 1;
+    printf_error("thread exit\n");
+    printf("thread exit\n");
 
-    exit(0);
     int pid = fork();
     int retval;
 
@@ -47,7 +51,7 @@ void first_process()
             }
 
             printf("all child process exit, programs: %d\n", programManager.allPrograms.size());
-            
+
             asm_halt();
         }
         else
@@ -72,15 +76,19 @@ void first_process()
 void second_thread(void *arg)
 {
     printf("thread exit\n");
-    //exit(0);
+    // exit(0);
 }
 
 void first_thread(void *arg)
 {
+    printf_warning("Begin Page Fault Testing\n");
+    char *memory_test = (char *)memoryManager.allocateVirtualPages(AddressPoolType::KERNEL, 1);
+    printf("allocate vaddr is : 0x%x.\n", (uint32)memory_test);
+    printf("Trying to read the memory: %c\n", memory_test[0]);
+    // memory_test[0] = 'a';
 
-    printf("start process\n");
-    
-    programManager.executeProcess((const char *)first_process, 1);
+    // printf("start process\n");
+    // programManager.executeProcess((const char *)first_process, 1);
     // programManager.executeThread(second_thread, nullptr, "second", 1);
     asm_halt();
 }

@@ -262,10 +262,3 @@ void MemoryManager::releaseVirtualPages(enum AddressPoolType type, const int vad
         programManager.running->userVirtual.release(vaddr, count);
     }
 }
-
-void MemoryManager::updateLRU()
-{
-    // kernelPhysical.updateLRU();
-    // userPhysical.updateLRU();
-    kernelVirtual.updateLRU();
-}
