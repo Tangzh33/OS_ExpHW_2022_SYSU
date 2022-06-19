@@ -138,7 +138,8 @@ extern "C" void setup_kernel()
     interruptManager.initialize();
     interruptManager.enableTimeInterrupt();
     interruptManager.setTimeInterrupt((void *)asm_time_interrupt_handler);
-
+    // 设置页错误中断的中断描述符
+    interruptManager.setInterruptDescriptor(14, (uint)asm_pageFault_interrupt_handler, 0);
     // 输出管理器
     stdio.initialize();
 

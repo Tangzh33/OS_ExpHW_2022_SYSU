@@ -7,6 +7,7 @@ global asm_halt
 global asm_out_port
 global asm_in_port
 global asm_time_interrupt_handler
+global asm_pageFault_interrupt_handler
 global asm_enable_interrupt
 global asm_enable_interrupt
 global asm_disable_interrupt
@@ -23,6 +24,7 @@ global asm_update_cr3
 global asm_inw_port
 global asm_outw_port
 extern c_time_interrupt_handler
+extern c_pageFault_handler
 extern system_call_table
 ASM_UNHANDLED_INTERRUPT_INFO db 'Unhandled interrupt happened, halt...'
                              db 0
@@ -282,6 +284,26 @@ asm_time_interrupt_handler:
     popad
     iret
 
+asm_pageFault_interrupt_handler:
+    pushad
+    push ds
+    push es
+    push fs
+    push gs
+
+    mov eax, cr2
+    mov ebx, [esp + 4 * 2]
+    push eax
+    push ebx
+    call c_pageFault_handler
+    add esp, 4
+
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popad
+    iret
 ; void asm_in_port(uint16 port, uint8 *value)
 asm_in_port:
     push ebp

@@ -101,7 +101,7 @@ extern "C" void c_time_interrupt_handler()
 }
 
 // 中断处理函数
-extern "C" void c_page_interrupt_handler(uint32 memory, uint32 errorcode)
+extern "C" void c_pageFault_handler(uint32 memory, uint32 errorcode)
 {
     printf_error("Handler catch memory address is :0x%x\n", memory);
     printf_error("Error code is 0x%x\n", errorcode);
