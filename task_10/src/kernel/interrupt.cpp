@@ -101,10 +101,25 @@ extern "C" void c_time_interrupt_handler()
 }
 
 // 中断处理函数
-extern "C" void c_pageFault_handler(uint32 memory, uint32 errorcode)
+extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr)
 {
-    printf_error("Handler catch memory address is :0x%x\n", memory);
-    printf_error("Error code is 0x%x\n", errorcode);
+    // 已经在汇编中关中断了，所以此时不必重复设置
+    printf_error("[Page Fault] is happening... Catch the fault page 0x%x\n", pageFault_Addr);
+    printf_error("[Page Fault] Error code is 0x%x\n", pageFault_Code);
+    bool accPer_Flag = (pageFault_Code & 8) >> 2;
+    bool wriPer_Flag = (pageFault_Code & 4) >> 1;
+    bool noPhy_Flag = !(pageFault_Code & 1);
+    printf_warning("[Page Fault] Report:");
+    if(noPhy_Flag)
+        printf_warning("  No Phy-Page connected");
+    if(wriPer_Flag)
+        printf_warning("  Write on Read-Only pages");
+    if(accPer_Flag)
+        printf_warning("  Operate on Illeagal pages");
+    printf_warning("\n");
+    if(accPer_Flag || wriPer_Flag)
+    // 对于前两种，是违法操作，不必操作系统进行响应
+        return;
     asm_halt();
 }
 

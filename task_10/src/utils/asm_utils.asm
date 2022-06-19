@@ -285,6 +285,12 @@ asm_time_interrupt_handler:
     iret
 
 asm_pageFault_interrupt_handler:
+
+    cli ;incase time interupt stop us
+
+    
+    push ebp
+    mov ebp, esp
     pushad
     push ds
     push es
@@ -292,17 +298,21 @@ asm_pageFault_interrupt_handler:
     push gs
 
     mov eax, cr2
-    mov ebx, [esp + 4 * 2]
+    mov ebx, [ebp + 4]
     push eax
     push ebx
     call c_pageFault_handler
-    add esp, 4
+    pop ebx
+    pop eax
 
     pop gs
     pop fs
     pop es
     pop ds
     popad
+    pop ebp
+    add esp, 4 ;remove the error code from interupt stack
+    sti
     iret
 ; void asm_in_port(uint16 port, uint8 *value)
 asm_in_port:

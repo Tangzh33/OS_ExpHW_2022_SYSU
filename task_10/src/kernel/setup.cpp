@@ -87,8 +87,16 @@ void first_thread(void *arg)
     printf_warning("Begin Page Fault Testing\n");
     char *memory_test = (char *)memoryManager.allocateVirtualPages(AddressPoolType::KERNEL, 1);
     printf("allocate vaddr is : 0x%x.\n", (uint32)memory_test);
+    int* pte = (int *)memoryManager.toPTE((int)memory_test);
+    printf("PTE Before %x\n", *pte); 
+    int physicalPageAddress = memoryManager.allocatePhysicalPages(AddressPoolType::KERNEL, 1);
+    memoryManager.connectPhysicalVirtualPage((int)memory_test, physicalPageAddress);
+    printf("PTE After %x\n", *pte); 
+    *pte = *pte & ~(1);
+    printf("PTE After %x\n", *pte); 
     printf("Trying to read the memory: %c\n", memory_test[0]);
-    memory_test[0] = 'a';
+    // int a = memory_test[0];
+    // memory_test[0] = 'a';
     // */
     /*
     Start Userspace testing
