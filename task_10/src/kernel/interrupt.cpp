@@ -17,7 +17,7 @@ void InterruptManager::initialize()
 {
     // 初始化中断计数变量
     times = 0;
-    
+
     // 初始化IDT
     IDT = (uint32 *)IDT_START_ADDRESS;
     asm_lidt(IDT_START_ADDRESS, 256 * 8 - 1);
@@ -100,6 +100,14 @@ extern "C" void c_time_interrupt_handler()
     }
 }
 
+// 中断处理函数
+extern "C" void c_page_interrupt_handler(uint32 memory, uint32 errorcode)
+{
+    printf_error("Handler catch memory address is :0x%x\n", memory);
+    printf_error("Error code is 0x%x\n", errorcode);
+    asm_halt();
+}
+
 void InterruptManager::enableInterrupt()
 {
     asm_enable_interrupt();
@@ -127,4 +135,3 @@ void InterruptManager::setInterruptStatus(bool status)
         disableInterrupt();
     }
 }
-

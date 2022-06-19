@@ -20,6 +20,8 @@ global asm_ltr
 global asm_add_global_descriptor
 global asm_start_process
 global asm_update_cr3
+global asm_inw_port
+global asm_outw_port
 extern c_time_interrupt_handler
 extern system_call_table
 ASM_UNHANDLED_INTERRUPT_INFO db 'Unhandled interrupt happened, halt...'
@@ -29,6 +31,39 @@ ASM_IDTR dw 0
 ASM_GDTR dw 0
          dd 0
 ASM_TEMP dd 0
+; void asm_inw_port(int port, void *value);
+asm_inw_port:
+    push ebp
+    mov ebp, esp
+
+    push edx
+    push ebx
+
+    xor eax, eax
+    mov edx, dword[ebp + 4 * 2]
+    mov ebx, dword[ebp + 4 * 3]
+    in ax, dx
+    mov word[ebx], ax
+
+    pop ebx
+    pop edx
+    pop ebp
+    ret
+
+; void asm_outw_port(int port, int value);
+asm_outw_port:
+    push ebp
+    mov ebp, esp
+
+    push edx
+
+    mov edx, dword[ebp + 4 * 2]
+    mov eax, dword[ebp + 4 * 3]
+    out dx, ax
+
+    pop edx
+    pop ebp
+    ret
 ; void asm_update_cr3(int address)
 asm_update_cr3:
     push eax

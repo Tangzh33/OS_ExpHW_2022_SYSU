@@ -22,5 +22,6 @@ extern "C" int asm_add_global_descriptor(int low, int high);
 extern "C" void asm_ltr(int tr);
 extern "C" void asm_start_process(int stack);
 extern "C" void asm_update_cr3(int address);
-
+extern "C" void asm_inw_port(int port, void *value);
+extern "C" void asm_outw_port(int port, int value);
 #endif

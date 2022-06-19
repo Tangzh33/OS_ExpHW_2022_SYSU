@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "syscall.h"
 #include "tss.h"
+#include "disk.h"
 
 // 屏幕IO处理器
 STDIO stdio;
@@ -81,15 +82,52 @@ void second_thread(void *arg)
 
 void first_thread(void *arg)
 {
+    // /*
+    // PageFault Testing
     printf_warning("Begin Page Fault Testing\n");
     char *memory_test = (char *)memoryManager.allocateVirtualPages(AddressPoolType::KERNEL, 1);
     printf("allocate vaddr is : 0x%x.\n", (uint32)memory_test);
     printf("Trying to read the memory: %c\n", memory_test[0]);
-    // memory_test[0] = 'a';
+    memory_test[0] = 'a';
+    // */
+    /*
+    Start Userspace testing
+    printf("start process\n");
+    programManager.executeProcess((const char *)first_process, 1);
+    programManager.executeThread(second_thread, nullptr, "second", 1);
+    */
 
-    // printf("start process\n");
-    // programManager.executeProcess((const char *)first_process, 1);
-    // programManager.executeThread(second_thread, nullptr, "second", 1);
+    /* disk测试代码
+    char buffer[SECTOR_SIZE] = "Hello Word TangZh";
+    Disk::write(1, buffer);
+    Disk::read(1, buffer);
+
+    for (int i = 0; i < 17; ++i)
+    {
+        printf("%c", buffer[i]);
+        if (i % 16 == 15)
+        {
+            printf("\n");
+        }
+    }
+
+    for (int i = 0; i < SECTOR_SIZE; ++i)
+    {
+        buffer[i] = i;
+    }
+
+    Disk::write(2, buffer);
+
+    char test_buffer[SECTOR_SIZE];
+    Disk::read(2, test_buffer);
+    for (int i = 0; i < SECTOR_SIZE; ++i)
+    {
+        if (buffer[i] != test_buffer[i])
+        {
+            printf_error("error!\n");
+        }
+    }
+    */
     asm_halt();
 }
 
