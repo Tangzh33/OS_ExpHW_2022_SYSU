@@ -8,6 +8,7 @@
 #include "syscall.h"
 #include "tss.h"
 #include "disk.h"
+#include "swap.h"
 
 // 屏幕IO处理器
 STDIO stdio;
@@ -82,7 +83,51 @@ void second_thread(void *arg)
 
 void first_thread(void *arg)
 {
-    // /*
+    // Swap in testing
+    // char buffer[SECTOR_SIZE] = "Hello Word TangZh";
+    char *buffer = (char*)memoryManager.allocatePages(AddressPoolType::KERNEL,1);
+    char *buffer_1 = (char*)memoryManager.allocatePages(AddressPoolType::KERNEL,1);
+    int *pte = (int*)memoryManager.toPTE((int)buffer);
+    int *pde = (int*)memoryManager.toPDE((int)buffer);
+    // printf("BEFORE PTE%x PDE%x\n",*pte, *pde);
+    // *pte = *pte & ~(1);
+    // *pde = *pde & ~(1);
+    // printf("AFTER PTE%x PDE%x\n",*pte, *pde);
+    // printf("visiting %d\n",buffer[0]);
+    // buffer[0] = 1;
+    // asm_halt();
+    // for (int i = 0; i < SECTOR_SIZE; ++i)
+    // {
+    //     buffer[i] = i;
+    // }
+    // *(int*)0xc0100300 = 1;
+
+    printf("Before Swapout: %d, PTE %x; PDE is %x\n", buffer[2],*pte,*pde);
+    // memoryManager.swapOut((uint32)buffer);
+    // memoryManager.swapOut((uint32)buffer_1);
+    // *pte = *pte & ~(1);
+    // buffer[0] = 'a';
+    // buffer[1] = 'a';
+    memoryManager.releasePages(AddressPoolType::KERNEL,(int)buffer,1);
+    printf("After Swapout before swapin: PTE %x; PDE is %x\n", *pte,*pde);
+    printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", buffer,*pte,buffer[10]);
+    // printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", *(int*)0xc0101000,*pte,buffer[0]);
+    asm_halt();
+    memoryManager.swapIn((uint32)buffer);
+    printf("After Swapin: %d, PTE %x; PDE is %x\n", buffer[2],*pte,*pde);
+    // *pte = *pte & ~(1);
+    // *pte = 0;
+    // for (int i = 0; i < 10; ++i)
+    // {
+    //     printf("%d ",buffer[i]);
+    //     if (buffer[i] != i)
+    //     {
+    //         printf_error("error!");
+    //     }
+    //     printf("\n");
+    // }
+    printf("Finish Testing\n");
+    /*
     // PageFault Testing
     printf_warning("Begin Page Fault Testing\n");
     char *memory_test = (char *)memoryManager.allocateVirtualPages(AddressPoolType::KERNEL, 1);
@@ -97,7 +142,7 @@ void first_thread(void *arg)
     printf("Trying to read the memory: %c\n", memory_test[0]);
     // int a = memory_test[0];
     // memory_test[0] = 'a';
-    // */
+    */
     /*
     Start Userspace testing
     printf("start process\n");

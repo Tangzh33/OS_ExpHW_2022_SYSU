@@ -104,23 +104,28 @@ extern "C" void c_time_interrupt_handler()
 extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr)
 {
     // 已经在汇编中关中断了，所以此时不必重复设置
+    pageFault_Addr = pageFault_Addr & 0xfffff0000;
     printf_error("[Page Fault] is happening... Catch the fault page 0x%x\n", pageFault_Addr);
     printf_error("[Page Fault] Error code is 0x%x\n", pageFault_Code);
-    bool accPer_Flag = (pageFault_Code & 8) >> 2;
-    bool wriPer_Flag = (pageFault_Code & 4) >> 1;
+    bool accPer_Flag = (pageFault_Code & 4) >> 2;
+    bool wriPer_Flag = (pageFault_Code & 2) >> 1;
     bool noPhy_Flag = !(pageFault_Code & 1);
     printf_warning("[Page Fault] Report:");
     if(noPhy_Flag)
-        printf_warning("  No Phy-Page connected");
-    if(wriPer_Flag)
-        printf_warning("  Write on Read-Only pages");
-    if(accPer_Flag)
-        printf_warning("  Operate on Illeagal pages");
-    printf_warning("\n");
-    if(accPer_Flag || wriPer_Flag)
+        printf_warning("  No Phy-Page connected\n");
     // 对于前两种，是违法操作，不必操作系统进行响应
-        return;
+    if(wriPer_Flag)
+    {
+        printf_warning("  Write on Read-Only pages. Halt...\n");
+        asm_halt();
+    }
+    if(accPer_Flag)
+    {
+        printf_warning("  Operate on Illeagal pages. Halt...\n");
+        asm_halt();
+    }
     asm_halt();
+    // return;
 }
 
 void InterruptManager::enableInterrupt()

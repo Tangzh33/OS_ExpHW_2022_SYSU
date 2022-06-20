@@ -20,7 +20,10 @@ public:
     AddressPool userPhysical;
     // 内核虚拟地址池
     AddressPool kernelVirtual;
-
+    // 换出管理器
+    // SwapManager swapManager;
+    int beginSector;
+    BitMap swapResources;
 public:
     MemoryManager();
 
@@ -63,6 +66,9 @@ public:
 
     // 释放虚拟页
     void releaseVirtualPages(enum AddressPoolType type, const int vaddr, const int count);
+    // 换入换出
+    int swapOut(uint32 vaddr);
+    int swapIn(uint32 vaddr);
 };
 
 #endif
