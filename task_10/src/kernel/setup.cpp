@@ -96,36 +96,35 @@ void first_thread(void *arg)
     // printf("visiting %d\n",buffer[0]);
     // buffer[0] = 1;
     // asm_halt();
-    // for (int i = 0; i < SECTOR_SIZE; ++i)
-    // {
-    //     buffer[i] = i;
-    // }
+    for (int i = 0; i < SECTOR_SIZE; ++i)
+    {
+        buffer[i] = i;
+        buffer_1[i] = i;
+    }
     // *(int*)0xc0100300 = 1;
 
     printf("Before Swapout: %d, PTE %x; PDE is %x\n", buffer[2],*pte,*pde);
-    // memoryManager.swapOut((uint32)buffer);
-    // memoryManager.swapOut((uint32)buffer_1);
-    // *pte = *pte & ~(1);
+    memoryManager.swapOut((uint32)buffer);
     // buffer[0] = 'a';
     // buffer[1] = 'a';
     memoryManager.releasePages(AddressPoolType::KERNEL,(int)buffer,1);
     printf("After Swapout before swapin: PTE %x; PDE is %x\n", *pte,*pde);
-    printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", buffer,*pte,buffer[10]);
+    // printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", buffer,*pte,buffer[10]);
     // printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", *(int*)0xc0101000,*pte,buffer[0]);
-    asm_halt();
+    // asm_halt();
     memoryManager.swapIn((uint32)buffer);
     printf("After Swapin: %d, PTE %x; PDE is %x\n", buffer[2],*pte,*pde);
-    // *pte = *pte & ~(1);
-    // *pte = 0;
-    // for (int i = 0; i < 10; ++i)
-    // {
-    //     printf("%d ",buffer[i]);
-    //     if (buffer[i] != i)
-    //     {
-    //         printf_error("error!");
-    //     }
-    //     printf("\n");
-    // }
+    *pte = *pte & ~(1);
+    *pte = 0;
+    for (int i = 0; i < SECTOR_SIZE; ++i)
+    {
+        // printf("%d ",buffer[i]);
+        if (buffer[i] != buffer_1[i])
+        {
+            printf_error("error!");
+        }
+        printf("\n");
+    }
     printf("Finish Testing\n");
     /*
     // PageFault Testing

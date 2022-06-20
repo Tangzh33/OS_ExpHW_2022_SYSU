@@ -23,6 +23,7 @@ global asm_start_process
 global asm_update_cr3
 global asm_inw_port
 global asm_outw_port
+global asm_update_tlb
 extern c_time_interrupt_handler
 extern c_pageFault_handler
 extern system_call_table
@@ -33,6 +34,15 @@ ASM_IDTR dw 0
 ASM_GDTR dw 0
          dd 0
 ASM_TEMP dd 0
+;  void asm_update_tlb();
+asm_update_tlb:
+    cli
+    push eax
+    mov eax, cr3
+    mov cr3, eax
+    pop eax
+    sti
+    ret
 ; void asm_inw_port(int port, void *value);
 asm_inw_port:
     push ebp

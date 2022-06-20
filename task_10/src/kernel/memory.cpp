@@ -243,6 +243,8 @@ void MemoryManager::releasePages(enum AddressPoolType type, const int virtualAdd
         // 设置页表项为不存在，防止释放后被再次使用
         pte = (int *)toPTE(vaddr);
         *pte = 0;
+        // 刷新TLB
+        asm_update_tlb();
     }
 
     // 第二步，释放虚拟页
@@ -286,8 +288,10 @@ int MemoryManager::swapOut(uint32 vaddr)
     }
     releasePhysicalPages(AddressPoolType::KERNEL, vaddr2paddr(vaddr), 1);
     // releasePages(AddressPoolType::USER, vaddr, 1);
-    *pte = 0;
-    // *pte = (index << 20) + 2;
+    // *pte = 0;
+    *pte = (index << 20) + 2;
+    // 刷新TLB
+    asm_update_tlb();
     return 0;
 }
 int MemoryManager::swapIn(uint32 vaddr)
@@ -313,4 +317,6 @@ int MemoryManager::swapIn(uint32 vaddr)
         Disk::read(index + i + beginSector, (void *)ptr);
     }
     swapResources.release(index, 8);
+    // 刷新TLB
+    asm_update_tlb();
 }
