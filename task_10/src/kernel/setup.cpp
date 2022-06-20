@@ -38,7 +38,10 @@ void first_process()
     // *ptr = 1;
     printf_error("thread exit\n");
     printf("thread exit\n");
-
+    char *buffer = (char*)memoryManager.allocateVirtualPages(AddressPoolType::USER,1);
+    buffer[0] = 1;
+    asm_halt();
+    exit(0);
     int pid = fork();
     int retval;
 
@@ -83,19 +86,13 @@ void second_thread(void *arg)
 
 void first_thread(void *arg)
 {
+    // /*
     // Swap in testing
     // char buffer[SECTOR_SIZE] = "Hello Word TangZh";
     char *buffer = (char*)memoryManager.allocatePages(AddressPoolType::KERNEL,1);
     char *buffer_1 = (char*)memoryManager.allocatePages(AddressPoolType::KERNEL,1);
     int *pte = (int*)memoryManager.toPTE((int)buffer);
     int *pde = (int*)memoryManager.toPDE((int)buffer);
-    // printf("BEFORE PTE%x PDE%x\n",*pte, *pde);
-    // *pte = *pte & ~(1);
-    // *pde = *pde & ~(1);
-    // printf("AFTER PTE%x PDE%x\n",*pte, *pde);
-    // printf("visiting %d\n",buffer[0]);
-    // buffer[0] = 1;
-    // asm_halt();
     for (int i = 0; i < SECTOR_SIZE; ++i)
     {
         buffer[i] = i;
@@ -104,28 +101,27 @@ void first_thread(void *arg)
     // *(int*)0xc0100300 = 1;
 
     printf("Before Swapout: %d, PTE %x; PDE is %x\n", buffer[2],*pte,*pde);
-    memoryManager.swapOut((uint32)buffer);
+    memoryManager.swapOut((uint32)buffer, 0);
     // buffer[0] = 'a';
     // buffer[1] = 'a';
-    memoryManager.releasePages(AddressPoolType::KERNEL,(int)buffer,1);
+    // memoryManager.releasePages(AddressPoolType::KERNEL,(int)buffer,1);
     printf("After Swapout before swapin: PTE %x; PDE is %x\n", *pte,*pde);
-    // printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", buffer,*pte,buffer[10]);
+    printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", buffer,*pte,buffer[10]);
     // printf("Trying to read: Addr 0x%x PTE 0x%x %d\n", *(int*)0xc0101000,*pte,buffer[0]);
-    // asm_halt();
-    memoryManager.swapIn((uint32)buffer);
+    // memoryManager.swapIn((uint32)buffer, 0);
     printf("After Swapin: %d, PTE %x; PDE is %x\n", buffer[2],*pte,*pde);
-    *pte = *pte & ~(1);
-    *pte = 0;
+    // asm_halt();
     for (int i = 0; i < SECTOR_SIZE; ++i)
     {
         // printf("%d ",buffer[i]);
         if (buffer[i] != buffer_1[i])
         {
-            printf_error("error!");
+            printf_error("error!\n");
         }
-        printf("\n");
+        // printf("\n");
     }
     printf("Finish Testing\n");
+    // */
     /*
     // PageFault Testing
     printf_warning("Begin Page Fault Testing\n");
@@ -143,10 +139,10 @@ void first_thread(void *arg)
     // memory_test[0] = 'a';
     */
     /*
-    Start Userspace testing
+    // Start Userspace testing
     printf("start process\n");
     programManager.executeProcess((const char *)first_process, 1);
-    programManager.executeThread(second_thread, nullptr, "second", 1);
+    // programManager.executeThread(second_thread, nullptr, "second", 1);
     */
 
     /* disk测试代码

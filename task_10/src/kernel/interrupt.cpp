@@ -101,30 +101,58 @@ extern "C" void c_time_interrupt_handler()
 }
 
 // 中断处理函数
-extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr)
+extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr, uint32 OSMod)
 {
     // 已经在汇编中关中断了，所以此时不必重复设置
-    pageFault_Addr = pageFault_Addr & 0xfffff0000;
+    pageFault_Addr = pageFault_Addr & 0xfffff000;
     printf_error("[Page Fault] is happening... Catch the fault page 0x%x\n", pageFault_Addr);
     printf_error("[Page Fault] Error code is 0x%x\n", pageFault_Code);
+    printf_error("[Page Fault] OS Mod is %d\n", OSMod & 3);
     bool accPer_Flag = (pageFault_Code & 4) >> 2;
     bool wriPer_Flag = (pageFault_Code & 2) >> 1;
     bool noPhy_Flag = !(pageFault_Code & 1);
+    bool inKer_Flag = ((OSMod & 3) == 0);
+    bool inDis_Flag = (*(int*)memoryManager.toPDE(pageFault_Addr)) & 2 >> 1;
+    enum AddressPoolType type = OSMod == 1 ? AddressPoolType::KERNEL : AddressPoolType:: USER;
     printf_warning("[Page Fault] Report:");
+    if(inDis_Flag)
+        printf_warning("  Page in disk");
     if(noPhy_Flag)
-        printf_warning("  No Phy-Page connected\n");
+        printf_warning("  No Phy-Page connected");
     // 对于前两种，是违法操作，不必操作系统进行响应
     if(wriPer_Flag)
     {
-        printf_warning("  Write on Read-Only pages. Halt...\n");
-        asm_halt();
+        printf_warning("  Write on Read-Only pages.");
+        // asm_halt();
     }
     if(accPer_Flag)
     {
         printf_warning("  Operate on Illeagal pages. Halt...\n");
         asm_halt();
     }
-    asm_halt();
+    printf("\n");
+    if(inDis_Flag)
+    {
+        memoryManager.swapIn(pageFault_Addr, inKer_Flag);
+        return;
+    }
+
+    int physicalPageAddress = memoryManager.allocatePhysicalPages(type, 1);
+    // int physicalPageAddress = allocatePhysicalPages(AddressPoolType::USER, 1);
+    if (physicalPageAddress == 0)
+    {
+        /*Find One Page and swapout*/
+        // TODO
+        printf_error("Unhandled!!!\n");
+        asm_halt();
+        int swapOutPage;
+        memoryManager.swapOut(swapOutPage, type);
+        physicalPageAddress = memoryManager.allocatePhysicalPages(type, 1);
+        // physicalPageAddress = allocatePhysicalPages(AddressPoolType::USER, 1);
+    }
+    memoryManager.connectPhysicalVirtualPage((int)pageFault_Addr, physicalPageAddress);
+    asm_update_tlb();
+    // asm_halt();
     // return;
 }
 

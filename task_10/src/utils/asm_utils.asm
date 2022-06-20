@@ -309,11 +309,14 @@ asm_pageFault_interrupt_handler:
 
     mov eax, cr2
     mov ebx, [ebp + 4]
+    mov ecx, [ebp + 4 * 3]
+    push ecx
     push eax
     push ebx
     call c_pageFault_handler
     pop ebx
     pop eax
+    pop ecx
 
     pop gs
     pop fs

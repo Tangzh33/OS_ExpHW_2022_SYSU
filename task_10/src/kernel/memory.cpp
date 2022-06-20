@@ -158,21 +158,21 @@ int MemoryManager::allocatePages(enum AddressPoolType type, const int count)
             // 第三步：为虚拟页建立页目录项和页表项，使虚拟页内的地址经过分页机制变换到物理页内。
             flag = connectPhysicalVirtualPage(vaddress, physicalPageAddress);
         }
-        else
-        {
-            flag = false;
-        }
+        // else
+        // {
+        //     flag = false;
+        // }
 
-        // 分配失败，释放前面已经分配的虚拟页和物理页表
-        if (!flag && type == AddressPoolType::KERNEL)
-        {
-            printf_warning("Allocating Physical Pages for kernal Failed. Releasing...\n");
-            // 前i个页表已经指定了物理页
-            releasePages(type, virtualAddress, i);
-            // 剩余的页表未指定物理页
-            releaseVirtualPages(type, virtualAddress + i * PAGE_SIZE, count - i);
-            return 0;
-        }
+        // // 分配失败，释放前面已经分配的虚拟页和物理页表
+        // if (!flag && type == AddressPoolType::KERNEL)
+        // {
+        //     printf_warning("Allocating Physical Pages for kernal Failed. Releasing...\n");
+        //     // 前i个页表已经指定了物理页
+        //     releasePages(type, virtualAddress, i);
+        //     // 剩余的页表未指定物理页
+        //     releaseVirtualPages(type, virtualAddress + i * PAGE_SIZE, count - i);
+        //     return 0;
+        // }
     }
 
     return virtualAddress;
@@ -271,8 +271,9 @@ void MemoryManager::releaseVirtualPages(enum AddressPoolType type, const int vad
     }
 }
 
-int MemoryManager::swapOut(uint32 vaddr)
+int MemoryManager::swapOut(uint32 vaddr, int mod)
 {
+    enum AddressPoolType type = mod == 1 ? AddressPoolType::KERNEL : AddressPoolType:: USER;
     int *pte = (int *)toPTE(vaddr);
     int index = swapResources.allocate(8);
     if (index == -1)
@@ -280,13 +281,13 @@ int MemoryManager::swapOut(uint32 vaddr)
         printf_error("Swapping Out is Failed due to limited swap-disk\n");
         return -1;
     }
-    printf_warning("Swapping out Page: 0x%x to Sector %d\n", vaddr, index + beginSector);
+    printf_warning("[Mod %d]Swapping out Page: 0x%x to Sector %d\n",mod, vaddr, index + beginSector);
     for (int i = 0; i < 8; i++)
     {
         char *ptr = (char *)vaddr + i * 512;
         Disk::write(index + i + beginSector, (void *)ptr);
     }
-    releasePhysicalPages(AddressPoolType::KERNEL, vaddr2paddr(vaddr), 1);
+    releasePhysicalPages(type, vaddr2paddr(vaddr), 1);
     // releasePages(AddressPoolType::USER, vaddr, 1);
     // *pte = 0;
     *pte = (index << 20) + 2;
@@ -294,20 +295,23 @@ int MemoryManager::swapOut(uint32 vaddr)
     asm_update_tlb();
     return 0;
 }
-int MemoryManager::swapIn(uint32 vaddr)
+int MemoryManager::swapIn(uint32 vaddr, int mod)
 {
+    enum AddressPoolType type = mod == 1 ? AddressPoolType::KERNEL : AddressPoolType:: USER;
     int *pte = (int *)toPTE(vaddr);
     int index = (*pte) >> 20;
-    printf_warning("Swapping in Page: 0x%x from Sector %d\n", vaddr, index + beginSector);
-    int physicalPageAddress = allocatePhysicalPages(AddressPoolType::KERNEL, 1);
+    printf_warning("[Mod %d]Swapping in Page: 0x%x from Sector %d\n",mod, vaddr, index + beginSector);
+    int physicalPageAddress = allocatePhysicalPages(type, 1);
     // int physicalPageAddress = allocatePhysicalPages(AddressPoolType::USER, 1);
     if (physicalPageAddress == 0)
     {
         /*Find One Page and swapout*/
         // TODO
+        printf_error("Unhandled!!!\n");
+        asm_halt();
         int swapOutPage;
-        swapOut(swapOutPage);
-        physicalPageAddress = allocatePhysicalPages(AddressPoolType::KERNEL, 1);
+        swapOut(swapOutPage, type);
+        physicalPageAddress = allocatePhysicalPages(type, 1);
         // physicalPageAddress = allocatePhysicalPages(AddressPoolType::USER, 1);
     }
     connectPhysicalVirtualPage((int)vaddr, physicalPageAddress);
