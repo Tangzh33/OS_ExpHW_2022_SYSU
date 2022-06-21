@@ -164,8 +164,21 @@ int MemoryManager::allocatePages(enum AddressPoolType type, const int count)
         {
             flag = false;
             int *pte = (int*)toPTE(vaddress);
-            // *(pte) = 0;
-            // asm_update_tlb();
+            if (type == AddressPoolType::KERNEL)
+            {
+                int index = (vaddress - kernelVirtual.startAddress) / PAGE_SIZE;
+                int i = 0;
+                for (i = 0; i < MAX_LENGTH && kernelVirtual.lruINDEX[i] != index; i++);
+                kernelVirtual.lruINDEX[i] = -1;
+            }
+            else if (type == AddressPoolType::USER)
+            { 
+                int index = (vaddress - (programManager.running)->userVirtual.startAddress) / PAGE_SIZE;
+                int i = 0;
+                for (i = 0; i < MAX_LENGTH && (programManager.running)->userVirtual.lruINDEX[i] != index; i++);
+                (programManager.running)->userVirtual.lruINDEX[i] = -1;
+            }
+            // int index =
             printf_warning("[%x, %x]Not enough phy-pages\n",vaddress, *pte);
         }
 
@@ -294,6 +307,20 @@ int MemoryManager::swapOut(uint32 vaddr, int mod)
         Disk::write(index + i + beginSector, (void *)ptr);
     }
     releasePhysicalPages(type, vaddr2paddr(vaddr), 1);
+    if (type == AddressPoolType::KERNEL)
+    {
+        int index = (vaddr - kernelVirtual.startAddress) / PAGE_SIZE;
+        int i = 0;
+        for (i = 0; i < MAX_LENGTH && kernelVirtual.lruINDEX[i] != index; i++);
+        kernelVirtual.lruINDEX[i] = -1;
+    }
+    else if (type == AddressPoolType::USER)
+    { 
+        int index = (vaddr - (programManager.running)->userVirtual.startAddress) / PAGE_SIZE;
+        int i = 0;
+        for (i = 0; i < MAX_LENGTH && (programManager.running)->userVirtual.lruINDEX[i] != index; i++);
+        (programManager.running)->userVirtual.lruINDEX[i] = -1;
+    }
     // releasePages(AddressPoolType::USER, vaddr, 1);
     // *pte = 0;
     *pte = (index << 20) + 2;
@@ -336,6 +363,20 @@ int MemoryManager::swapIn(uint32 vaddr, int mod)
         Disk::read(index + i + beginSector, (void *)ptr);
     }
     swapResources.release(index, 8);
+    if (type == AddressPoolType::KERNEL)
+    {
+        int index = (vaddr - kernelVirtual.startAddress) / PAGE_SIZE;
+        int i = 0;
+        for (i = 0; i < MAX_LENGTH && kernelVirtual.lruINDEX[i] != -1; i++);
+        kernelVirtual.lruINDEX[i] = index;
+    }
+    else if (type == AddressPoolType::USER)
+    { 
+        int index = (vaddr - (programManager.running)->userVirtual.startAddress) / PAGE_SIZE;
+        int i = 0;
+        for (i = 0; i < MAX_LENGTH && (programManager.running)->userVirtual.lruINDEX[i] != -1; i++);
+        (programManager.running)->userVirtual.lruINDEX[i] = index;
+    }
     // 刷新TLB
     asm_update_tlb();
 }

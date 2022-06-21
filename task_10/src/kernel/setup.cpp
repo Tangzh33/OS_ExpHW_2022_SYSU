@@ -49,6 +49,7 @@ void first_process()
     
     printf("%x\n",*(int*)memoryManager.toPTE((int)&buffer[3][0]));
     printf("%d\n",buffer[3][0]);
+    printf_error("Begin Copying Testing\n");
     for (int i = 0; i < 47; i++)
     {
         if(buffer[0][i] != i)
