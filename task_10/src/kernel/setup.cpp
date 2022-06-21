@@ -32,50 +32,66 @@ int syscall_0(int first, int second, int third, int forth, int fifth)
 
 void first_process()
 {
-    printf_log("thread exit\n");
-    printf_warning("thread exit\n");
-    unsigned int *ptr = (unsigned int *)0x60000001;
-    // *ptr = 1;
-    printf_error("thread exit\n");
-    printf("thread exit\n");
-    char *buffer = (char*)memoryManager.allocateVirtualPages(AddressPoolType::USER,1);
-    buffer[0] = 1;
+    printf_warning("Testing my process\n");
+    enum AddressPoolType type = AddressPoolType::USER;
+    char* buffer[4];
+    for (int i = 0; i < 4; i++)
+    {
+        buffer[i] = (char*)memoryManager.allocatePages(USER, 1);
+    }
+    // buffer[1][1] = 1;
+    for (int i = 0; i < 47; i++)
+    {
+        buffer[0][i] = i;
+        buffer[1][i] = i;
+        buffer[2][i] = i;
+    }
+    
+    printf("%x\n",*(int*)memoryManager.toPTE((int)&buffer[3][0]));
+    printf("%d\n",buffer[3][0]);
+    for (int i = 0; i < 47; i++)
+    {
+        if(buffer[0][i] != i)
+            printf_error("ERROR!\n");
+    }
+    printf_warning("Finish testing...\n");
     asm_halt();
-    exit(0);
-    int pid = fork();
-    int retval;
 
-    if (pid)
-    {
-        pid = fork();
-        if (pid)
-        {
-            while ((pid = wait(&retval)) != -1)
-            {
-                printf("wait for a child process, pid: %d, return value: %d\n", pid, retval);
-            }
+    // exit(0);
+    // int pid = fork();
+    // int retval;
 
-            printf("all child process exit, programs: %d\n", programManager.allPrograms.size());
+    // if (pid)
+    // {
+    //     pid = fork();
+    //     if (pid)
+    //     {
+    //         while ((pid = wait(&retval)) != -1)
+    //         {
+    //             printf("wait for a child process, pid: %d, return value: %d\n", pid, retval);
+    //         }
 
-            asm_halt();
-        }
-        else
-        {
-            uint32 tmp = 0xffffff;
-            while (tmp)
-                --tmp;
-            printf("exit, pid: %d\n", programManager.running->pid);
-            exit(123934);
-        }
-    }
-    else
-    {
-        uint32 tmp = 0xffffff;
-        while (tmp)
-            --tmp;
-        printf("exit, pid: %d\n", programManager.running->pid);
-        exit(-123);
-    }
+    //         printf("all child process exit, programs: %d\n", programManager.allPrograms.size());
+
+    //         asm_halt();
+    //     }
+    //     else
+    //     {
+    //         uint32 tmp = 0xffffff;
+    //         while (tmp)
+    //             --tmp;
+    //         printf("exit, pid: %d\n", programManager.running->pid);
+    //         exit(123934);
+    //     }
+    // }
+    // else
+    // {
+    //     uint32 tmp = 0xffffff;
+    //     while (tmp)
+    //         --tmp;
+    //     printf("exit, pid: %d\n", programManager.running->pid);
+    //     exit(-123);
+    // }
 }
 
 void second_thread(void *arg)
@@ -86,7 +102,7 @@ void second_thread(void *arg)
 
 void first_thread(void *arg)
 {
-    // /*
+    /*
     // Swap in testing
     // char buffer[SECTOR_SIZE] = "Hello Word TangZh";
     char *buffer = (char*)memoryManager.allocatePages(AddressPoolType::KERNEL,1);
@@ -121,7 +137,7 @@ void first_thread(void *arg)
         // printf("\n");
     }
     printf("Finish Testing\n");
-    // */
+    */
     /*
     // PageFault Testing
     printf_warning("Begin Page Fault Testing\n");
@@ -138,12 +154,16 @@ void first_thread(void *arg)
     // int a = memory_test[0];
     // memory_test[0] = 'a';
     */
-    /*
+    // /*
     // Start Userspace testing
     printf("start process\n");
+    int * pte= (int *)memoryManager.toPTE(0xc0101000);
+    printf_warning("%x %x\n",pte,*pte);
     programManager.executeProcess((const char *)first_process, 1);
+    printf_warning("%x %x\n",pte,*pte);
+    
     // programManager.executeThread(second_thread, nullptr, "second", 1);
-    */
+    // */
 
     /* disk测试代码
     char buffer[SECTOR_SIZE] = "Hello Word TangZh";

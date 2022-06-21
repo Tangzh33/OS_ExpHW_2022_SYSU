@@ -30,6 +30,8 @@ void MemoryManager::initialize()
     int freePages = freeMemory / PAGE_SIZE;
     int kernelPages = freePages / 2;
     int userPages = freePages - kernelPages;
+    // 限制内存上限
+    userPages = 4;
 
     int kernelPhysicalStartAddress = usedMemory;
     int userPhysicalStartAddress = usedMemory + kernelPages * PAGE_SIZE;
@@ -158,10 +160,14 @@ int MemoryManager::allocatePages(enum AddressPoolType type, const int count)
             // 第三步：为虚拟页建立页目录项和页表项，使虚拟页内的地址经过分页机制变换到物理页内。
             flag = connectPhysicalVirtualPage(vaddress, physicalPageAddress);
         }
-        // else
-        // {
-        //     flag = false;
-        // }
+        else
+        {
+            flag = false;
+            int *pte = (int*)toPTE(vaddress);
+            // *(pte) = 0;
+            // asm_update_tlb();
+            printf_warning("[%x, %x]Not enough phy-pages\n",vaddress, *pte);
+        }
 
         // // 分配失败，释放前面已经分配的虚拟页和物理页表
         // if (!flag && type == AddressPoolType::KERNEL)
@@ -281,7 +287,7 @@ int MemoryManager::swapOut(uint32 vaddr, int mod)
         printf_error("Swapping Out is Failed due to limited swap-disk\n");
         return -1;
     }
-    printf_warning("[Mod %d]Swapping out Page: 0x%x to Sector %d\n",mod, vaddr, index + beginSector);
+    printf_warning("[Mod %d]Swapping out Page: 0x%x to Sector %d\n",!mod, vaddr, index + beginSector);
     for (int i = 0; i < 8; i++)
     {
         char *ptr = (char *)vaddr + i * 512;
@@ -300,16 +306,25 @@ int MemoryManager::swapIn(uint32 vaddr, int mod)
     enum AddressPoolType type = mod == 1 ? AddressPoolType::KERNEL : AddressPoolType:: USER;
     int *pte = (int *)toPTE(vaddr);
     int index = (*pte) >> 20;
-    printf_warning("[Mod %d]Swapping in Page: 0x%x from Sector %d\n",mod, vaddr, index + beginSector);
+    printf_warning("[Mod %d]Swapping in Page: 0x%x from Sector %d\n",!mod, vaddr, index + beginSector);
     int physicalPageAddress = allocatePhysicalPages(type, 1);
     // int physicalPageAddress = allocatePhysicalPages(AddressPoolType::USER, 1);
     if (physicalPageAddress == 0)
     {
         /*Find One Page and swapout*/
-        // TODO
-        printf_error("Unhandled!!!\n");
-        asm_halt();
-        int swapOutPage;
+        // printf_error("Unhandled!!!\n");
+        // asm_halt();
+        int swapOutPage = 0;
+        if(type == 1)
+        {
+            // in kernel
+            swapOutPage = memoryManager.kernelVirtual.findSwapOut();
+        }
+        else
+        {
+            // in user space
+            swapOutPage = programManager.running->userVirtual.findSwapOut();
+        }
         swapOut(swapOutPage, type);
         physicalPageAddress = allocatePhysicalPages(type, 1);
         // physicalPageAddress = allocatePhysicalPages(AddressPoolType::USER, 1);

@@ -88,7 +88,10 @@ void InterruptManager::setTimeInterrupt(void *handler)
 extern "C" void c_time_interrupt_handler()
 {
     PCB *cur = programManager.running;
-
+    if(cur->pageDirectoryAddress == 0)
+        memoryManager.kernelVirtual.updateLRU();
+    else
+        cur->userVirtual.updateLRU();
     if (cur->ticks)
     {
         --cur->ticks;
@@ -106,13 +109,13 @@ extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr
     // 已经在汇编中关中断了，所以此时不必重复设置
     pageFault_Addr = pageFault_Addr & 0xfffff000;
     printf_error("[Page Fault] is happening... Catch the fault page 0x%x\n", pageFault_Addr);
-    printf_error("[Page Fault] Error code is 0x%x\n", pageFault_Code);
-    printf_error("[Page Fault] OS Mod is %d\n", OSMod & 3);
+    printf_error("[Page Fault] Error code is 0x%x PTE is %x OS Mod is %d\n", pageFault_Code, *(int*)memoryManager.toPTE(pageFault_Addr), OSMod & 3);
+    // printf_error("[Page Fault] OS Mod is %x\n", (int*)memoryManager.toPTE(pageFault_Addr));
     bool accPer_Flag = (pageFault_Code & 4) >> 2;
     bool wriPer_Flag = (pageFault_Code & 2) >> 1;
     bool noPhy_Flag = !(pageFault_Code & 1);
     bool inKer_Flag = ((OSMod & 3) == 0);
-    bool inDis_Flag = (*(int*)memoryManager.toPDE(pageFault_Addr)) & 2 >> 1;
+    bool inDis_Flag = ((*(int*)memoryManager.toPTE(pageFault_Addr)) & 2 ) == 2;
     enum AddressPoolType type = OSMod == 1 ? AddressPoolType::KERNEL : AddressPoolType:: USER;
     printf_warning("[Page Fault] Report:");
     if(inDis_Flag)
@@ -127,10 +130,11 @@ extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr
     }
     if(accPer_Flag)
     {
-        printf_warning("  Operate on Illeagal pages. Halt...\n");
-        asm_halt();
+        printf_warning("  Operate on Illeagal pages. Halt...");
+        // asm_halt();
     }
     printf("\n");
+    // asm_halt();
     if(inDis_Flag)
     {
         memoryManager.swapIn(pageFault_Addr, inKer_Flag);
@@ -142,10 +146,20 @@ extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr
     if (physicalPageAddress == 0)
     {
         /*Find One Page and swapout*/
-        // TODO
-        printf_error("Unhandled!!!\n");
-        asm_halt();
-        int swapOutPage;
+        // printf_error("Unhandled!!!\n");
+        // asm_halt();
+        int swapOutPage = 0;
+        if(type == 1)
+        {
+            // in kernel
+            swapOutPage = memoryManager.kernelVirtual.findSwapOut();
+        }
+        else
+        {
+            // in user space
+            swapOutPage = programManager.running->userVirtual.findSwapOut();
+        }
+        
         memoryManager.swapOut(swapOutPage, type);
         physicalPageAddress = memoryManager.allocatePhysicalPages(type, 1);
         // physicalPageAddress = allocatePhysicalPages(AddressPoolType::USER, 1);

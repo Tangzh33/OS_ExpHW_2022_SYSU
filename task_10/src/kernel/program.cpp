@@ -7,6 +7,7 @@
 #include "os_modules.h"
 #include "tss.h"
 #include "os_constant.h"
+#include "memory.h"
 #include "process.h"
 
 const int PCB_SIZE = 4096;                   // PCB的大小，4KB。
@@ -92,6 +93,7 @@ int ProgramManager::executeThread(ThreadFunction function, void *parameter, cons
 
 void ProgramManager::schedule()
 {
+ 
     bool status = interruptManager.getInterruptStatus();
     interruptManager.disableInterrupt();
 
@@ -126,10 +128,8 @@ void ProgramManager::schedule()
     running = next;
     readyPrograms.pop_front();
 
-    //printf("schedule: %x %x\n", cur, next);
-
+ 
     activateProgramPage(next);
-
     asm_switch_thread(cur, next);
 
     interruptManager.setInterruptStatus(status);
