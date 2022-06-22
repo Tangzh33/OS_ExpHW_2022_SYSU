@@ -30,17 +30,17 @@ void MemoryManager::initialize()
     int freePages = freeMemory / PAGE_SIZE;
     int kernelPages = freePages / 2;
     int userPages = freePages - kernelPages;
-    // 限制内存上限
-    userPages = 4;
-
+    
     int kernelPhysicalStartAddress = usedMemory;
     int userPhysicalStartAddress = usedMemory + kernelPages * PAGE_SIZE;
 
     int kernelPhysicalBitMapStart = BITMAP_START_ADDRESS;
     int userPhysicalBitMapStart = kernelPhysicalBitMapStart + ceil(kernelPages, 8);
     int kernelVirtualBitMapStart = userPhysicalBitMapStart + ceil(userPages, 8);
-    int swapManagerBitMapStart = kernelPhysicalBitMapStart + ceil(userPages, 8);
+    int swapManagerBitMapStart = kernelPhysicalBitMapStart + ceil(kernelPages, 8);
 
+    // 限制内存上限
+    userPages = 4;
     kernelPhysical.initialize(
         (char *)kernelPhysicalBitMapStart,
         kernelPages,
@@ -84,7 +84,7 @@ void MemoryManager::initialize()
            "    total pages: %d  ( %d MB ) \n"
            "    bit map start address: 0x%x\n",
            KERNEL_VIRTUAL_START,
-           userPages, kernelPages * PAGE_SIZE / 1024 / 1024,
+           kernelPages, kernelPages * PAGE_SIZE / 1024 / 1024,
            kernelVirtualBitMapStart);
 }
 

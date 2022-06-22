@@ -48,15 +48,22 @@ void first_process()
     }
     
     printf("%x\n",*(int*)memoryManager.toPTE((int)&buffer[3][0]));
-    printf("%d\n",buffer[3][0]);
+    printf("Reading the unallocated page: %d\n",buffer[3][0]);
     printf_error("Begin Copying Testing\n");
+    int flag = 1;
     for (int i = 0; i < 47; i++)
     {
         if(buffer[0][i] != i)
-            printf_error("ERROR!\n");
+        {
+            flag = 0;
+            printf_error("ERROR! Break...\n");
+        }
     }
+    if(flag)
+        printf_warning("Congratulations! No Fault!\n");
     printf_warning("Finish testing...\n");
-    asm_halt();
+
+    // asm_halt();
 
     // exit(0);
     // int pid = fork();
@@ -158,10 +165,10 @@ void first_thread(void *arg)
     // /*
     // Start Userspace testing
     printf("start process\n");
-    int * pte= (int *)memoryManager.toPTE(0xc0101000);
-    printf_warning("%x %x\n",pte,*pte);
+    // int * pte= (int *)memoryManager.toPTE(0xc0101000);
+    // printf_warning("%x %x\n",pte,*pte);
     programManager.executeProcess((const char *)first_process, 1);
-    printf_warning("%x %x\n",pte,*pte);
+    printf_error("Kernel Process is halting...\n");
     
     // programManager.executeThread(second_thread, nullptr, "second", 1);
     // */

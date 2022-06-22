@@ -130,7 +130,7 @@ extern "C" void c_pageFault_handler(uint32 pageFault_Code, uint32 pageFault_Addr
     }
     if(accPer_Flag)
     {
-        printf_warning("  Operate on Illeagal pages. Halt...");
+        printf_warning("  Operate on Illeagal pages.");
         // asm_halt();
     }
     printf("\n");
