@@ -119,7 +119,7 @@ void test_alloc()
     test[1] = 'T';
     printf_log("Attempting to visit alloc :%c\n",test[1]);
     AddressPoolType type = AddressPoolType::USER;
-    free(type, (void*) test);
+    free((void*) test);
     printf_log("Attempting to visit alloc :%d\n",test[1]);
     printf_warning("End tesing\n");
 }

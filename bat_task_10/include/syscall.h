@@ -37,6 +37,6 @@ void *malloc(int size);
 void *syscall_malloc(int size);
 
 // 第6个系统调用, free
-void free(enum AddressPoolType type,void *address);
-void syscall_free(enum AddressPoolType type,void *address);
+void free(void *address);
+void syscall_free(void *address);
 #endif

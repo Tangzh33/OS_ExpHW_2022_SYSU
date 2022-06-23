@@ -76,14 +76,15 @@ void *syscall_malloc(int size)
     }
 }
 
-void free(enum AddressPoolType type,void *address)
+void free(void *address)
 {
-    asm_system_call(6, type,(int)address);
+    asm_system_call(6, (int)address);
 }
 
-void syscall_free(enum AddressPoolType type,void *address)
+void syscall_free(void *address)
 {
     PCB *pcb = programManager.running;
+    enum AddressPoolType type = pcb->pageDirectoryAddress == 0 ? AddressPoolType::KERNEL : AddressPoolType::USER;
     if (pcb->pageDirectoryAddress)
     {
         pcb->byteMemoryManager.release(type,address);
