@@ -49,7 +49,7 @@ void *ByteMemoryManager::allocate(int size)
     }
     else
     {
-        printf("---ByteMemoryManager::allocate----\n");
+            printf_warning("[ByteMemoryManager]allocating...\n");
         if (arenas[index] == nullptr)
         {
             if (!getNewArena(poolType, index))
@@ -70,8 +70,7 @@ void *ByteMemoryManager::allocate(int size)
 
         Arena *arena = (Arena *)((int)ans & 0xfffff000);
         --(arena->counter);
-        printf("allocate pages in address %x, %d arena in this page left.\n",arena,arena->counter);
-        printf("---ByteMemoryManager::allocate----\n");
+        printf_warning("[ByteMemoryManager]Pages vaddress %x, Arena balance: %d\n",arena,arena->counter);
     }
     locks[index].unlock();
     return ans;
@@ -82,7 +81,7 @@ bool ByteMemoryManager::getNewArena(AddressPoolType type, int index)
 
     if (ptr == nullptr)
         return false;
-    printf("allocate a page! address:%x\n",(ptr+sizeof(Arena)));
+    printf_warning("[ByteMemoryManager]Pages vaddress %x\n",(ptr+sizeof(Arena)));
     // 内存块的数量
     int times = (PAGE_SIZE - sizeof(Arena)) / arenaSize[index];
     // 内存块的起始地址
@@ -92,7 +91,7 @@ bool ByteMemoryManager::getNewArena(AddressPoolType type, int index)
     Arena *arena = (Arena *)ptr;
     arena->type = (ArenaType)index;
     arena->counter = times;
-    printf("---ByteMemoryManager::getNewArena: type: %d, arena->counter: %d\n", index, arena->counter);
+    printf_warning("[ByteMemoryManager]NewArena: type: %d, Arena balance:  %d\n", index, arena->counter);
 
     MemoryBlockListItem *prevPtr = (MemoryBlockListItem *)address;
     MemoryBlockListItem *curPtr = nullptr;
@@ -142,7 +141,7 @@ void ByteMemoryManager::release(enum AddressPoolType type,void *address)
 
         // 若整个Arena被归还，则清空分配给Arena的页
         int amount = (PAGE_SIZE - sizeof(Arena)) / arenaSize[arena->type];
-        printf("---ByteMemoryManager::release---: arena->counter: %d, amount: %d\n", arena->counter, amount);
+        printf_warning("[ByteMemoryManager]Releasing arena Arena balance: %d, amount: %d\n", arena->counter, amount);
 
         if (arena->counter == amount)
         {
@@ -177,7 +176,7 @@ void ByteMemoryManager::release(enum AddressPoolType type,void *address)
             }
 
             memoryManager.releasePages(type,(int)address, 1);
-            printf("release a page! address:%x\n",address);
+            printf_warning("[ByteMemoryManager]Released page vaddress:%x\n",address);
             locks[arena->type].unlock();
         }
     }
