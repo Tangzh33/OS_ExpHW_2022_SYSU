@@ -9,7 +9,7 @@
 #include "tss.h"
 #include "disk.h"
 #include "swap.h"
-#include "alloc.h"
+#include "bytememory.h"
 
 // 屏幕IO处理器
 STDIO stdio;
@@ -23,8 +23,8 @@ MemoryManager memoryManager;
 SystemService systemService;
 // Task State Segment
 TSS tss;
-// Alloc 分配启动器
-ByteMemoryManager byteMemoryManager;
+// alloc管理器
+ByteMemoryManager kernelByteMemoryManager;
 
 int syscall_0(int first, int second, int third, int forth, int fifth)
 {
@@ -111,6 +111,19 @@ void second_thread(void *arg)
     // exit(0);
 }
 
+void test_alloc()
+{
+    printf_warning("Begin testing alloc...\n");
+    programManager.running->byteMemoryManager.initialize();
+    char* test = (char*)malloc(1);
+    test[1] = 'T';
+    printf_log("Attempting to visit alloc :%c\n",test[1]);
+    AddressPoolType type = AddressPoolType::USER;
+    free(type, (void*) test);
+    printf_log("Attempting to visit alloc :%d\n",test[1]);
+    printf_warning("End tesing\n");
+}
+
 void first_thread(void *arg)
 {
     /*
@@ -167,12 +180,12 @@ void first_thread(void *arg)
     */
     // /*
     // Start Userspace testing
-    // printf("start process\n");
+    printf("start process\n");
     // int * pte= (int *)memoryManager.toPTE(0xc0101000);
     // printf_warning("%x %x\n",pte,*pte);
     // programManager.executeProcess((const char *)first_process, 1);
-    // printf_error("Kernel Process is halting...\n");
-
+    programManager.executeProcess((const char *)test_alloc, 1);
+    printf_error("Kernel Process is halting...\n");
     
     // programManager.executeThread(second_thread, nullptr, "second", 1);
     // */
@@ -208,11 +221,6 @@ void first_thread(void *arg)
         }
     }
     */
-    //  Alloc Manager
-    int* test = (int*)byteMemoryManager.allocate(1);
-    test[0] = 1;
-    byteMemoryManager.release((void*)test);
-    test[0] = 1;
     asm_halt();
 }
 
@@ -231,6 +239,9 @@ extern "C" void setup_kernel()
     // 进程/线程管理器
     programManager.initialize();
 
+    // alloc管理器
+    kernelByteMemoryManager.initialize();
+
     // 初始化系统调用
     systemService.initialize();
     // 设置0号系统调用
@@ -243,12 +254,13 @@ extern "C" void setup_kernel()
     systemService.setSystemCall(3, (int)syscall_exit);
     // 设置4号系统调用
     systemService.setSystemCall(4, (int)syscall_wait);
+    // 设置5号系统调用
+    systemService.setSystemCall(5, (int)syscall_malloc);
+    // 设置6号系统调用
+    systemService.setSystemCall(6, (int)syscall_free);
 
     // 内存管理器
     memoryManager.initialize();
-
-    // alloc管理器初始化
-    byteMemoryManager.initialize();
 
     // 创建第一个线程
     int pid = programManager.executeThread(first_thread, nullptr, "first thread", 1);

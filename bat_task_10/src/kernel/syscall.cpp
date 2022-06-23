@@ -55,3 +55,41 @@ int wait(int *retval) {
 int syscall_wait(int *retval) {
     return programManager.wait(retval);
 }
+
+void *malloc(int size)
+{
+    asm_system_call(5, size);
+}
+
+void *syscall_malloc(int size)
+{
+    PCB *pcb = programManager.running;
+    if (pcb->pageDirectoryAddress)
+    {
+        // 每一个进程有自己的ByteMemoryManager
+        return pcb->byteMemoryManager.allocate(size);
+    }
+    else
+    {
+        // 所有内核线程共享一个ByteMemoryManager
+        return kernelByteMemoryManager.allocate(size);
+    }
+}
+
+void free(enum AddressPoolType type,void *address)
+{
+    asm_system_call(6, type,(int)address);
+}
+
+void syscall_free(enum AddressPoolType type,void *address)
+{
+    PCB *pcb = programManager.running;
+    if (pcb->pageDirectoryAddress)
+    {
+        pcb->byteMemoryManager.release(type,address);
+    }
+    else
+    {
+        kernelByteMemoryManager.release(type,address);
+    }
+}

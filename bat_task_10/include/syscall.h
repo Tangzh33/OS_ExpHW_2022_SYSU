@@ -2,6 +2,7 @@
 #define SYSCALL_H
 
 #include "os_constant.h"
+#include "memory.h"
 
 class SystemService
 {
@@ -31,4 +32,11 @@ void syscall_exit(int ret);
 int wait(int *retval);
 int syscall_wait(int *retval);
 
+// 第5个系统调用, malloc
+void *malloc(int size);
+void *syscall_malloc(int size);
+
+// 第6个系统调用, free
+void free(enum AddressPoolType type,void *address);
+void syscall_free(enum AddressPoolType type,void *address);
 #endif

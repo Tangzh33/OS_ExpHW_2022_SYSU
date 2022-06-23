@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "syscall.h"
 #include "tss.h"
+#include "bytememory.h"
 
 extern InterruptManager interruptManager;
 extern STDIO stdio;
@@ -14,5 +15,6 @@ extern ProgramManager programManager;
 extern MemoryManager memoryManager;
 extern SystemService systemService;
 extern TSS tss;
+extern ByteMemoryManager kernelByteMemoryManager;
 
 #endif

@@ -4,3 +4,4 @@ set disassembly-flavor intel
 b setup_kernel
 b first_thread
 b first_process
+b test_alloc

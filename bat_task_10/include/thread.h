@@ -4,6 +4,7 @@
 #include "list.h"
 #include "os_constant.h"
 #include "address_pool.h"
+#include "bytememory.h"
 
 typedef void (*ThreadFunction)(void *);
 
@@ -32,6 +33,7 @@ struct PCB
     AddressPool userVirtual;  // 用户程序虚拟地址池
     int parentPid;            // 父进程pid
     int retValue;             // 返回值
+    ByteMemoryManager byteMemoryManager; // 进程内存管理者
 };
 
 #endif
